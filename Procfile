@@ -1,1 +1,1 @@
-web: java $JAVA_OPTS WebApp.jar
+web: java $JAVA_OPTS -cp target/classes:target/dependency/* AppLauncher
