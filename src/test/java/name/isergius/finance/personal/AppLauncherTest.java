@@ -1,4 +1,4 @@
-package name.isergius.finance;
+package name.isergius.finance.personal;
 
 import org.junit.Assert;
 import org.junit.Test;
