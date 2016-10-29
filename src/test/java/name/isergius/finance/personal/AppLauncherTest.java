@@ -7,13 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Created by isergius on 28.10.16.
  */
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.port=8081"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class AppLauncherTest {
 
