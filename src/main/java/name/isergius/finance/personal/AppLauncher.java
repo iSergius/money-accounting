@@ -29,17 +29,18 @@ public class AppLauncher {
     }
 
     @Bean
-    public RouterFunction<ServerResponse> monoRouterPing(PingInteractor pingInteractor, RecordInteractor recordInteractor) {
-        return route(GET("/ping"), request -> {
-            return ServerResponse.ok()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(pingInteractor.ping(), String.class);
-        }).andRoute(GET("/record/generateId"), request -> {
-            return ServerResponse.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(recordInteractor.generateId()
-                            .map(uuid -> new RecordIdResource(uuid, Duration.ofSeconds(2).toMillis())), RecordIdResource.class);
-        });
+    public RouterFunction<ServerResponse> routerPing(PingInteractor pingInteractor) {
+        return route(GET("/ping"), request -> ServerResponse.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(pingInteractor.ping(), String.class));
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> routerRecord(RecordInteractor interactor) {
+        return route(GET("/record/generateId"), request -> ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(interactor.generateId()
+                        .map(uuid -> new RecordIdResource(uuid, Duration.ofSeconds(2).toMillis())), RecordIdResource.class));
     }
 
     @Bean
