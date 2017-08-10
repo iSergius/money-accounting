@@ -1,12 +1,18 @@
 package name.isergius.finance.personal;
 
-import name.isergius.finance.personal.ui.PingHandler;
-import name.isergius.finance.personal.ui.RecordHandler;
+import name.isergius.finance.personal.damain.PingHandler;
+import name.isergius.finance.personal.damain.PingInteractor;
+import name.isergius.finance.personal.damain.RecordHandler;
+import name.isergius.finance.personal.damain.RecordInteractor;
+import name.isergius.finance.personal.ui.dto.RecordIdResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+
+import java.time.Duration;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -23,9 +29,18 @@ public class AppLauncher {
     }
 
     @Bean
-    public RouterFunction<ServerResponse> monoRouterPing(PingHandler pingHandler, RecordHandler recordHandler) {
-        return route(GET("/ping"), pingHandler::ping)
-                .andRoute(GET("/record/generateId"), recordHandler::generateId);
+    public RouterFunction<ServerResponse> routerPing(PingInteractor pingInteractor) {
+        return route(GET("/ping"), request -> ServerResponse.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(pingInteractor.ping(), String.class));
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> routerRecord(RecordInteractor interactor) {
+        return route(GET("/record/generateId"), request -> ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(interactor.generateId()
+                        .map(uuid -> new RecordIdResource(uuid, Duration.ofSeconds(2).toMillis())), RecordIdResource.class));
     }
 
     @Bean
