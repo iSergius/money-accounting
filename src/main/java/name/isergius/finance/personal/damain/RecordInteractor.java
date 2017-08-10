@@ -1,4 +1,4 @@
-package name.isergius.finance.personal.ui;
+package name.isergius.finance.personal.damain;
 
 import reactor.core.publisher.Mono;
 

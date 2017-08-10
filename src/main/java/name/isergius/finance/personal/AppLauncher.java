@@ -1,9 +1,9 @@
 package name.isergius.finance.personal;
 
-import name.isergius.finance.personal.ui.PingHandler;
-import name.isergius.finance.personal.ui.PingInteractor;
-import name.isergius.finance.personal.ui.RecordHandler;
-import name.isergius.finance.personal.ui.RecordInteractor;
+import name.isergius.finance.personal.damain.PingHandler;
+import name.isergius.finance.personal.damain.PingInteractor;
+import name.isergius.finance.personal.damain.RecordHandler;
+import name.isergius.finance.personal.damain.RecordInteractor;
 import name.isergius.finance.personal.ui.dto.RecordIdResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
