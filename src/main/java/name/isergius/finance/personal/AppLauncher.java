@@ -60,8 +60,11 @@ public class AppLauncher {
                             LocalDateTime date = LocalDateTime.ofInstant(new Date(r.getDate()).toInstant(), ZoneId.systemDefault());
                             return Mono.just(new Record(id, amount, r.getCurrency(), date));
                         })
+                        .onErrorResume(throwable -> Mono.empty())
                         .doOnNext(interactor::save))
                         .flatMap(voidMono -> ServerResponse.created(request.uri())
+                                .build())
+                        .switchIfEmpty(ServerResponse.badRequest()
                                 .build())
         );
     }
