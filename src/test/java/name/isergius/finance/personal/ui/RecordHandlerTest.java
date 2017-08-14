@@ -116,4 +116,19 @@ public class RecordHandlerTest {
                 .exchange()
                 .expectStatus().isBadRequest();
     }
+
+    @Test
+    public void testSave_withoutReservedId() throws Exception {
+        JSONObject body = new JSONObject()
+                .put("amoun", "10")
+                .put("currency", "USD")
+                .put("date", LocalDate.now().toEpochDay());
+        UUID id = UUID.randomUUID();
+        webClient.put()
+                .uri(URL_RECORD_ID, id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .syncBody(body.toString())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
 }
