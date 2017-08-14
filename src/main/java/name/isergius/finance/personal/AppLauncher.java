@@ -10,7 +10,15 @@ import name.isergius.finance.personal.ui.dto.RecordResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.HttpSecurity;
+import org.springframework.security.core.userdetails.MapUserDetailsRepository;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsRepository;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -73,5 +81,28 @@ public class AppLauncher {
     @Bean
     public RecordInteractor recordHandler() {
         return new RecordHandler();
+    }
+
+    @Configuration
+    @EnableWebFluxSecurity
+    class SecurityConfiguration {
+
+        @Bean
+        UserDetailsRepository userDetailsRepository() {
+            return new MapUserDetailsRepository(
+                    User.withUsername("u3er").roles("USER").password("password").build(),
+                    User.withUsername("4dmin").roles("ADMIN", "USER").password("password").build());
+        }
+
+        @Bean
+        SecurityWebFilterChain securityWebFilterChain(HttpSecurity httpSecurity) {
+            return httpSecurity
+                    .authorizeExchange()
+                    .pathMatchers(HttpMethod.GET, "/ping").permitAll()
+                    .pathMatchers("/record/**").hasRole("USER")
+                    .anyExchange().hasRole("ADMIN").and()
+                    .build();
+
+        }
     }
 }

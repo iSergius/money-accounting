@@ -2,15 +2,16 @@ package name.isergius.finance.personal.ui;
 
 import name.isergius.finance.personal.ui.dto.RecordIdResource;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.Instant;
@@ -18,11 +19,12 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
 /**
  * Sergey Kondratyev
  */
+@WithMockUser
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class RecordHandlerTest {
@@ -31,30 +33,32 @@ public class RecordHandlerTest {
     private static final String URL_RECORD_ID = "/record/{id}";
 
     @Autowired
-    private TestRestTemplate restTemplate;
-    @Autowired
+    private ApplicationContext context;
+
     private WebTestClient webClient;
+
+    @Before
+    public void setUp() throws Exception {
+        webClient = WebTestClient
+                .bindToApplicationContext(this.context)
+                .apply(springSecurity())
+                .build();
+    }
 
     @Test
     public void testGenerateId_success() throws Exception {
-        ResponseEntity<RecordIdResource> responseEntity = successRequest();
-        RecordIdResource actual = responseEntity.getBody();
+        FluxExchangeResult<RecordIdResource> result = successRequest();
+        RecordIdResource actual = result.getResponseBody()
+                .blockFirst();
         assertNotNull(actual.getId());
         assertNotNull(actual.getTtl());
     }
 
-//    @Test
-//    public void testGenerateId_ttlMustBeTwoSeconds() throws Exception {
-//        ResponseEntity<RecordIdResource> responseEntity = successRequest();
-//        assertTrue(responseEntity.getBody().getTtl() == TimeUnit.SECONDS.toMillis(2));
-//    }
-
-    private ResponseEntity<RecordIdResource> successRequest() {
-        ResponseEntity<RecordIdResource> responseEntity = restTemplate.getForEntity(URL_RECORD_GENERATE_ID, RecordIdResource.class);
-        if (!responseEntity.hasBody() && !responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-            fail("Response body must be");
-        }
-        return responseEntity;
+    private FluxExchangeResult<RecordIdResource> successRequest() {
+        return webClient.get()
+                .uri(URL_RECORD_GENERATE_ID)
+                .exchange()
+                .returnResult(RecordIdResource.class);
     }
 
     @Test
@@ -63,7 +67,9 @@ public class RecordHandlerTest {
                 .put("amount", "10")
                 .put("currency", "USD")
                 .put("date", Instant.now().toEpochMilli());
-        UUID id = successRequest().getBody().getId();
+        UUID id = successRequest().getResponseBody()
+                .blockFirst()
+                .getId();
         webClient.put()
                 .uri(URL_RECORD_ID, id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +84,9 @@ public class RecordHandlerTest {
                 .put("amoun", "10")
                 .put("currency", "USD")
                 .put("date", LocalDate.now().toEpochDay());
-        UUID id = UUID.randomUUID();
+        UUID id = successRequest().getResponseBody()
+                .blockFirst()
+                .getId();
         webClient.put()
                 .uri(URL_RECORD_ID, id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -93,14 +101,16 @@ public class RecordHandlerTest {
                 .put("amount", "10")
                 .put("currency", "USD")
                 .put("date", Instant.now().toEpochMilli());
-        RecordIdResource idResource = successRequest().getBody();
+        UUID id = successRequest().getResponseBody()
+                .blockFirst()
+                .getId();
         try {
             Thread.sleep(2500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         webClient.put()
-                .uri(URL_RECORD_ID, idResource.getId())
+                .uri(URL_RECORD_ID, id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .syncBody(body.toString())
                 .exchange()
