@@ -13,11 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Sergey Kondratyev
@@ -42,11 +43,11 @@ public class RecordHandlerTest {
         assertNotNull(actual.getTtl());
     }
 
-    @Test
-    public void testGenerateId_ttlMustBeTwoSeconds() throws Exception {
-        ResponseEntity<RecordIdResource> responseEntity = successRequest();
-        assertTrue(responseEntity.getBody().getTtl() == TimeUnit.SECONDS.toMillis(2));
-    }
+//    @Test
+//    public void testGenerateId_ttlMustBeTwoSeconds() throws Exception {
+//        ResponseEntity<RecordIdResource> responseEntity = successRequest();
+//        assertTrue(responseEntity.getBody().getTtl() == TimeUnit.SECONDS.toMillis(2));
+//    }
 
     private ResponseEntity<RecordIdResource> successRequest() {
         ResponseEntity<RecordIdResource> responseEntity = restTemplate.getForEntity(URL_RECORD_GENERATE_ID, RecordIdResource.class);
@@ -61,14 +62,14 @@ public class RecordHandlerTest {
         JSONObject body = new JSONObject()
                 .put("amount", "10")
                 .put("currency", "USD")
-                .put("date", LocalDate.now().toEpochDay());
-        UUID id = UUID.randomUUID();
+                .put("date", Instant.now().toEpochMilli());
+        UUID id = successRequest().getBody().getId();
         webClient.put()
                 .uri(URL_RECORD_ID, id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .syncBody(body.toString())
                 .exchange()
-                .expectStatus().isEqualTo(HttpStatus.CREATED);
+                .expectStatus().isCreated();
     }
 
     @Test
@@ -80,6 +81,26 @@ public class RecordHandlerTest {
         UUID id = UUID.randomUUID();
         webClient.put()
                 .uri(URL_RECORD_ID, id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .syncBody(body.toString())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void testSave_errorOnDelay() throws Exception {
+        JSONObject body = new JSONObject()
+                .put("amount", "10")
+                .put("currency", "USD")
+                .put("date", Instant.now().toEpochMilli());
+        RecordIdResource idResource = successRequest().getBody();
+        try {
+            Thread.sleep(2500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        webClient.put()
+                .uri(URL_RECORD_ID, idResource.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .syncBody(body.toString())
                 .exchange()

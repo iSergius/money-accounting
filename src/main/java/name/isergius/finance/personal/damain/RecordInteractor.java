@@ -1,16 +1,15 @@
 package name.isergius.finance.personal.damain;
 
 import name.isergius.finance.personal.damain.entity.Record;
+import name.isergius.finance.personal.damain.entity.RecordId;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
 
 /**
  * Sergey Kondratyev
  */
 public interface RecordInteractor {
 
-    Mono<UUID> generateId();
+    Mono<RecordId> generateId();
 
     Mono<Void> save(Mono<Record> record);
 }

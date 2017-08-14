@@ -16,7 +16,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -48,24 +47,21 @@ public class AppLauncher {
     public RouterFunction<ServerResponse> routerRecord(RecordInteractor interactor) {
         return route(GET("/record/generateId"), request ->
                 interactor.generateId()
-                        .map(uuid -> Mono.just(new RecordIdResource(uuid, Duration.ofSeconds(2).toMillis())))
+                        .map(recordId -> Mono.just(new RecordIdResource(recordId.getId(), recordId.getDate())))
                         .flatMap(recordIdResource -> ServerResponse.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .body(recordIdResource, RecordIdResource.class))
         ).andRoute(PUT("/record/{id}"), request ->
-                Mono.from(request.bodyToMono(RecordResource.class)
+                request.bodyToMono(RecordResource.class)
                         .map(r -> {
                             UUID id = UUID.fromString(request.pathVariable("id"));
                             BigDecimal amount = new BigDecimal(r.getAmount());
                             LocalDateTime date = LocalDateTime.ofInstant(new Date(r.getDate()).toInstant(), ZoneId.systemDefault());
                             return Mono.just(new Record(id, amount, r.getCurrency(), date));
                         })
-                        .onErrorResume(throwable -> Mono.empty())
-                        .doOnNext(interactor::save))
-                        .flatMap(voidMono -> ServerResponse.created(request.uri())
-                                .build())
-                        .switchIfEmpty(ServerResponse.badRequest()
-                                .build())
+                        .flatMap(interactor::save)
+                        .then(ServerResponse.created(request.uri()).build())
+                        .onErrorReturn(ServerResponse.badRequest().build().block())
         );
     }
 
