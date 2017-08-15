@@ -5,12 +5,15 @@ import name.isergius.finance.personal.damain.PingInteractor;
 import name.isergius.finance.personal.damain.RecordHandler;
 import name.isergius.finance.personal.damain.RecordInteractor;
 import name.isergius.finance.personal.damain.entity.Record;
+import name.isergius.finance.personal.data.RecordRepository;
+import name.isergius.finance.personal.data.RecordRepositoryImpl;
 import name.isergius.finance.personal.ui.dto.RecordIdResource;
 import name.isergius.finance.personal.ui.dto.RecordResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -24,9 +27,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -64,12 +65,26 @@ public class AppLauncher {
                         .map(r -> {
                             UUID id = UUID.fromString(request.pathVariable("id"));
                             BigDecimal amount = new BigDecimal(r.getAmount());
-                            LocalDateTime date = LocalDateTime.ofInstant(new Date(r.getDate()).toInstant(), ZoneId.systemDefault());
+                            Instant date = Instant.ofEpochMilli(r.getDate());
                             return Mono.just(new Record(id, amount, r.getCurrency(), date));
                         })
                         .flatMap(interactor::save)
                         .then(ServerResponse.created(request.uri()).build())
                         .onErrorReturn(ServerResponse.badRequest().build().block())
+        ).andRoute(GET("/record/{id}"), request ->
+                Mono.just(request.pathVariable("id"))
+                        .map(UUID::fromString)
+                        .map(Mono::just)
+                        .flatMap(interactor::getBy)
+                        .map(r -> {
+                            UUID id = r.getId();
+                            String currency = r.getCurrency();
+                            String amount = r.getAmount().toString();
+                            long date = r.getDate().toEpochMilli();
+                            return Mono.just(new RecordResource(id, amount, currency, date));
+                        })
+                        .flatMap(r -> ServerResponse.ok()
+                                .body(r, RecordResource.class))
         );
     }
 
@@ -79,8 +94,13 @@ public class AppLauncher {
     }
 
     @Bean
-    public RecordInteractor recordHandler() {
-        return new RecordHandler();
+    public RecordInteractor recordHandler(RecordRepository repository) {
+        return new RecordHandler(repository);
+    }
+
+    @Bean
+    public RecordRepository recordRepository(ReactiveMongoTemplate template) {
+        return new RecordRepositoryImpl(template);
     }
 
     @Configuration
