@@ -19,7 +19,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
@@ -33,6 +35,15 @@ public class RecordHandlerTest {
 
     private static final String URL_RECORD_GENERATE_ID = "/record/generateId";
     private static final String URL_RECORD_ID = "/record/{id}";
+    private static final String URL_ALL_RECORD = "/record/";
+
+    private static final String PROPERTY_RECORD_AMOUNT = "amount";
+    private static final String PROPERTY_RECORD_WRONG_AMOUNT = "amoun";
+    private static final String PROPERTY_RECORD_CURRENCY = "currency";
+    private static final String PROPERTY_RECORD_DATE = "date";
+    private static final String VALUE_RECORD_AMOUNT = "10";
+    private static final String VALUE_RECORD_CURRENCY = "USD";
+    private static final int VALUE_RECORD_DATE = 1000;
 
     @Autowired
     private ApplicationContext context;
@@ -66,9 +77,9 @@ public class RecordHandlerTest {
     @Test
     public void testSave_success() throws Exception {
         JSONObject body = new JSONObject()
-                .put("amount", "10")
-                .put("currency", "USD")
-                .put("date", Instant.now().toEpochMilli());
+                .put(PROPERTY_RECORD_AMOUNT, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_CURRENCY, VALUE_RECORD_CURRENCY)
+                .put(PROPERTY_RECORD_DATE, Instant.now().toEpochMilli());
         UUID id = successRequest().getResponseBody()
                 .blockFirst()
                 .getId();
@@ -83,9 +94,9 @@ public class RecordHandlerTest {
     @Test
     public void testSave_wrongRequestBody() throws Exception {
         JSONObject body = new JSONObject()
-                .put("amoun", "10")
-                .put("currency", "USD")
-                .put("date", LocalDate.now().toEpochDay());
+                .put(PROPERTY_RECORD_WRONG_AMOUNT, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_CURRENCY, VALUE_RECORD_CURRENCY)
+                .put(PROPERTY_RECORD_DATE, LocalDate.now().toEpochDay());
         UUID id = successRequest().getResponseBody()
                 .blockFirst()
                 .getId();
@@ -100,9 +111,9 @@ public class RecordHandlerTest {
     @Test
     public void testSave_errorOnDelay() throws Exception {
         JSONObject body = new JSONObject()
-                .put("amount", "10")
-                .put("currency", "USD")
-                .put("date", Instant.now().toEpochMilli());
+                .put(PROPERTY_RECORD_AMOUNT, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_CURRENCY, VALUE_RECORD_CURRENCY)
+                .put(PROPERTY_RECORD_DATE, Instant.now().toEpochMilli());
         UUID id = successRequest().getResponseBody()
                 .blockFirst()
                 .getId();
@@ -122,9 +133,9 @@ public class RecordHandlerTest {
     @Test
     public void testSave_withoutReservedId() throws Exception {
         JSONObject body = new JSONObject()
-                .put("amoun", "10")
-                .put("currency", "USD")
-                .put("date", LocalDate.now().toEpochDay());
+                .put(PROPERTY_RECORD_AMOUNT, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_CURRENCY, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_DATE, LocalDate.now().toEpochDay());
         UUID id = UUID.randomUUID();
         webClient.put()
                 .uri(URL_RECORD_ID, id)
@@ -143,7 +154,7 @@ public class RecordHandlerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(RecordResource.class)
-                .isEqualTo(new RecordResource(id, "10", "USD", 1000));
+                .isEqualTo(new RecordResource(id, VALUE_RECORD_AMOUNT, VALUE_RECORD_CURRENCY, VALUE_RECORD_DATE));
     }
 
     @Test
@@ -158,9 +169,9 @@ public class RecordHandlerTest {
 
     private UUID createRecord() throws JSONException {
         JSONObject body = new JSONObject()
-                .put("amount", "10")
-                .put("currency", "USD")
-                .put("date", 1000);
+                .put(PROPERTY_RECORD_AMOUNT, VALUE_RECORD_AMOUNT)
+                .put(PROPERTY_RECORD_CURRENCY, VALUE_RECORD_CURRENCY)
+                .put(PROPERTY_RECORD_DATE, VALUE_RECORD_DATE);
         UUID id = successRequest().getResponseBody()
                 .blockFirst()
                 .getId();
@@ -171,5 +182,21 @@ public class RecordHandlerTest {
                 .exchange()
                 .expectStatus().isCreated();
         return id;
+    }
+
+    @Test
+    public void testGetAll_success() throws Exception {
+        RecordResource[] resources = Stream.of(createRecord(), createRecord())
+                .map(id -> new RecordResource(id, VALUE_RECORD_AMOUNT, VALUE_RECORD_CURRENCY, VALUE_RECORD_DATE))
+                .collect(toList())
+                .toArray(new RecordResource[2]);
+        webClient.get()
+                .uri(URL_ALL_RECORD)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(RecordResource[].class)
+                .isEqualTo(resources);
+
     }
 }
