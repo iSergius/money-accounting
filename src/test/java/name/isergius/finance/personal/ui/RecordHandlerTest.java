@@ -216,4 +216,22 @@ public class RecordHandlerTest {
                 .isEqualTo(new RecordResource[0]);
 
     }
+
+    @Test
+    public void testDelete_success() throws Exception {
+        UUID id = createRecord();
+        webClient.delete()
+                .uri(URL_RECORD_ID, id)
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void testDelete_notContainRecord() throws Exception {
+        UUID id = UUID.randomUUID();
+        webClient.delete()
+                .uri(URL_RECORD_ID, id)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }

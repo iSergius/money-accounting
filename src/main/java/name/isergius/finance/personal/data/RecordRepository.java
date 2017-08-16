@@ -17,4 +17,6 @@ public interface RecordRepository {
     Mono<Record> findById(Publisher<UUID> id);
 
     Flux<Record> findAll();
+
+    Mono<Void> deleteBy(Publisher<UUID> id);
 }

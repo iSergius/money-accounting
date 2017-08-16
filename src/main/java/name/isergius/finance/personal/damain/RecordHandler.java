@@ -48,4 +48,9 @@ public class RecordHandler implements RecordInteractor {
     public Flux<Record> getAll() {
         return repository.findAll();
     }
+
+    @Override
+    public Mono<Void> delBy(Mono<UUID> id) {
+        return repository.deleteBy(id);
+    }
 }
