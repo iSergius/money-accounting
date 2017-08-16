@@ -1,6 +1,8 @@
 package name.isergius.finance.personal.ui;
 
 import name.isergius.finance.personal.ui.dto.RecordIdResource;
+import name.isergius.finance.personal.ui.dto.RecordResource;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -130,5 +132,44 @@ public class RecordHandlerTest {
                 .syncBody(body.toString())
                 .exchange()
                 .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void testGet_success() throws Exception {
+        UUID id = createRecord();
+        webClient.get()
+                .uri(URL_RECORD_ID, id)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(RecordResource.class)
+                .isEqualTo(new RecordResource(id, "10", "USD", 1000));
+    }
+
+    @Test
+    public void testGet_notContainId() throws Exception {
+        UUID id = UUID.randomUUID();
+        webClient.get()
+                .uri(URL_RECORD_ID, id)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    private UUID createRecord() throws JSONException {
+        JSONObject body = new JSONObject()
+                .put("amount", "10")
+                .put("currency", "USD")
+                .put("date", 1000);
+        UUID id = successRequest().getResponseBody()
+                .blockFirst()
+                .getId();
+        webClient.put()
+                .uri(URL_RECORD_ID, id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .syncBody(body.toString())
+                .exchange()
+                .expectStatus().isCreated();
+        return id;
     }
 }
