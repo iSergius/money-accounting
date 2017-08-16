@@ -33,4 +33,12 @@ public class RecordRepositoryImpl implements RecordRepository {
     public Flux<Record> findAll() {
         return template.findAll(Record.class);
     }
+
+    @Override
+    public Mono<Void> deleteBy(Publisher<UUID> id) {
+        return Mono.from(id)
+                .flatMap(rid -> template.findById(rid, Record.class))
+                .map(template::remove)
+                .then();
+    }
 }

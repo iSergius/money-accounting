@@ -30,8 +30,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 /**
@@ -97,6 +96,10 @@ public class AppLauncher {
                                     long date = r.getDate().toEpochMilli();
                                     return new RecordResource(id, amount, currency, date);
                                 }), RecordResource.class)
+        ).andRoute(DELETE("/record/{id}"), request ->
+                Mono.just(request.pathVariable("id"))
+                        .flatMap(s -> interactor.delBy(Mono.just(UUID.fromString(s))))
+                        .then(ServerResponse.ok().build())
         );
     }
 

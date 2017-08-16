@@ -19,4 +19,6 @@ public interface RecordInteractor {
     Mono<Record> getBy(Mono<UUID> id);
 
     Flux<Record> getAll();
+
+    Mono<Void> delBy(Mono<UUID> id);
 }
