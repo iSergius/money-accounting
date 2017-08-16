@@ -2,6 +2,7 @@ package name.isergius.finance.personal.damain;
 
 import name.isergius.finance.personal.damain.entity.Record;
 import name.isergius.finance.personal.damain.entity.RecordId;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -16,4 +17,6 @@ public interface RecordInteractor {
     Mono<Void> save(Mono<Record> record);
 
     Mono<Record> getBy(Mono<UUID> id);
+
+    Flux<Record> getAll();
 }

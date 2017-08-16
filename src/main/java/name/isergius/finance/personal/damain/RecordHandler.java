@@ -3,6 +3,7 @@ package name.isergius.finance.personal.damain;
 import name.isergius.finance.personal.damain.entity.Record;
 import name.isergius.finance.personal.damain.entity.RecordId;
 import name.isergius.finance.personal.data.RecordRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -41,5 +42,10 @@ public class RecordHandler implements RecordInteractor {
     @Override
     public Mono<Record> getBy(Mono<UUID> id) {
         return repository.findById(id);
+    }
+
+    @Override
+    public Flux<Record> getAll() {
+        return repository.findAll();
     }
 }

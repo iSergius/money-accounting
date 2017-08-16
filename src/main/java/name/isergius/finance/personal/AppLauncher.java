@@ -87,6 +87,16 @@ public class AppLauncher {
                                 .body(r, RecordResource.class))
                         .switchIfEmpty(ServerResponse.notFound()
                                 .build())
+        ).andRoute(GET("/record/"), request ->
+                ServerResponse.ok()
+                        .body(interactor.getAll()
+                                .map(r -> {
+                                    UUID id = r.getId();
+                                    String currency = r.getCurrency();
+                                    String amount = r.getAmount().toString();
+                                    long date = r.getDate().toEpochMilli();
+                                    return new RecordResource(id, amount, currency, date);
+                                }), RecordResource.class)
         );
     }
 
