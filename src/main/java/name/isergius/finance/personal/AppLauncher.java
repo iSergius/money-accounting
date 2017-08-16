@@ -100,6 +100,9 @@ public class AppLauncher {
                 Mono.just(request.pathVariable("id"))
                         .flatMap(s -> interactor.delBy(Mono.just(UUID.fromString(s))))
                         .then(ServerResponse.ok().build())
+                        .onErrorReturn(ServerResponse.notFound()
+                                .build()
+                                .block())
         );
     }
 
