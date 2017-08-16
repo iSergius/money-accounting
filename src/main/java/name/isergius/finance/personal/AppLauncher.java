@@ -85,6 +85,8 @@ public class AppLauncher {
                         })
                         .flatMap(r -> ServerResponse.ok()
                                 .body(r, RecordResource.class))
+                        .switchIfEmpty(ServerResponse.notFound()
+                                .build())
         );
     }
 

@@ -146,6 +146,16 @@ public class RecordHandlerTest {
                 .isEqualTo(new RecordResource(id, "10", "USD", 1000));
     }
 
+    @Test
+    public void testGet_notContainId() throws Exception {
+        UUID id = UUID.randomUUID();
+        webClient.get()
+                .uri(URL_RECORD_ID, id)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
     private UUID createRecord() throws JSONException {
         JSONObject body = new JSONObject()
                 .put("amount", "10")
