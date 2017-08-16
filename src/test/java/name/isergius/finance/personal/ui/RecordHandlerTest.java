@@ -1,5 +1,6 @@
 package name.isergius.finance.personal.ui;
 
+import name.isergius.finance.personal.damain.entity.Record;
 import name.isergius.finance.personal.ui.dto.RecordIdResource;
 import name.isergius.finance.personal.ui.dto.RecordResource;
 import org.json.JSONException;
@@ -10,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -47,6 +49,8 @@ public class RecordHandlerTest {
 
     @Autowired
     private ApplicationContext context;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     private WebTestClient webClient;
 
@@ -56,6 +60,7 @@ public class RecordHandlerTest {
                 .bindToApplicationContext(this.context)
                 .apply(springSecurity())
                 .build();
+        mongoTemplate.dropCollection(Record.class);
     }
 
     @Test
@@ -197,6 +202,18 @@ public class RecordHandlerTest {
                 .expectStatus().isOk()
                 .expectBody(RecordResource[].class)
                 .isEqualTo(resources);
+
+    }
+
+    @Test
+    public void testGetAll_empty() throws Exception {
+        webClient.get()
+                .uri(URL_ALL_RECORD)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(RecordResource[].class)
+                .isEqualTo(new RecordResource[0]);
 
     }
 }
