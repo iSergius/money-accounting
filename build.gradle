@@ -1,0 +1,25 @@
+plugins {
+    id 'org.springframework.boot' version '1.5.8.RELEASE'
+    id "io.spring.dependency-management" version "1.0.3.RELEASE"
+    id 'java'
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'name.isergius.finance.personal'
+version = '1.0-SNAPSHOT'
+
+description = """"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web"
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+}
